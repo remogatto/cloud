@@ -9,18 +9,27 @@ import (
 	"net/url"
 )
 
+// A client represents a client connection to a {own|next}cloud
 type Client struct {
 	Url      *url.URL
 	Username string
 	Password string
 }
 
+// Error type encapsulates the returned error messages from the
+// server.
 type Error struct {
+	// Exception contains the type of the exception returned by
+	// the server.
 	Exception string `xml:"exception"`
-	Message   string `xml:"message"`
+
+	// Message contains the error message string from the server.
+	Message string `xml:"message"`
 }
 
-func NewClient(host, username, password string) (*Client, error) {
+// Dial connects to an {own|next}Cloud instance at the specified
+// address using the given credentials.
+func Dial(host, username, password string) (*Client, error) {
 	url, err := url.Parse(host)
 	if err != nil {
 		return nil, err
@@ -32,6 +41,7 @@ func NewClient(host, username, password string) (*Client, error) {
 	}, nil
 }
 
+// Mkdir creates a new directory on the cloud with the specified name.
 func (c *Client) Mkdir(folder string) error {
 
 	// Create the https request
@@ -74,6 +84,7 @@ func (c *Client) Mkdir(folder string) error {
 	return nil
 }
 
+// Delete removes the specified folder from the cloud.
 func (c *Client) Delete(folder string) error {
 
 	// Create the https request
@@ -116,6 +127,8 @@ func (c *Client) Delete(folder string) error {
 	return nil
 }
 
+// Upload uploads the specified source to the specified destination
+// path on the cloud.
 func (c *Client) Upload(src []byte, dest string) error {
 
 	destUrl, err := url.Parse(dest)
@@ -158,6 +171,7 @@ func (c *Client) Upload(src []byte, dest string) error {
 	return nil
 }
 
+// Download downloads a file from the specified path.q
 func (c *Client) Download(path string) ([]byte, error) {
 
 	pathUrl, err := url.Parse(path)
@@ -193,4 +207,8 @@ func (c *Client) Download(path string) ([]byte, error) {
 	}
 
 	return body, nil
+}
+
+func (c *Client) sendRequest() {
+
 }

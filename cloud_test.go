@@ -26,7 +26,7 @@ func TestRunner(t *testing.T) {
 
 func (t *testSuite) BeforeAll() {
 	var err error
-	client, err = NewClient(
+	client, err = Dial(
 		"http://localhost:8080/remote.php/webdav/",
 		"admin",
 		"password",
