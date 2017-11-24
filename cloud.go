@@ -42,89 +42,16 @@ func Dial(host, username, password string) (*Client, error) {
 }
 
 // Mkdir creates a new directory on the cloud with the specified name.
-func (c *Client) Mkdir(folder string) error {
+func (c *Client) Mkdir(path string) error {
+	_, err := c.sendRequest("MKCOL", path)
+	return err
 
-	// Create the https request
-
-	folderUrl, err := url.Parse(folder)
-	if err != nil {
-		return err
-	}
-
-	client := &http.Client{}
-	req, err := http.NewRequest("MKCOL", c.Url.ResolveReference(folderUrl).String(), nil)
-	if err != nil {
-		return err
-	}
-
-	req.SetBasicAuth(c.Username, c.Password)
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	if len(body) > 0 {
-		error := Error{}
-		err = xml.Unmarshal(body, &error)
-		if err != nil {
-			return fmt.Errorf("Error during XML Unmarshal for response %s. The error was %s", body, err)
-		}
-		if error.Exception != "" {
-			return fmt.Errorf("Exception: %s, Message: %s", error.Exception, error.Message)
-		}
-
-	}
-
-	return nil
 }
 
 // Delete removes the specified folder from the cloud.
-func (c *Client) Delete(folder string) error {
-
-	// Create the https request
-
-	folderUrl, err := url.Parse(folder)
-	if err != nil {
-		return err
-	}
-
-	client := &http.Client{}
-	req, err := http.NewRequest("DELETE", c.Url.ResolveReference(folderUrl).String(), nil)
-	if err != nil {
-		return err
-	}
-
-	req.SetBasicAuth(c.Username, c.Password)
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	if len(body) > 0 {
-		error := Error{}
-		err = xml.Unmarshal(body, &error)
-		if err != nil {
-			return err
-		}
-		if error.Exception != "" {
-			return fmt.Errorf("Exception: %s, Message: %s", error.Exception, error.Message)
-		}
-
-	}
-
-	return nil
+func (c *Client) Delete(path string) error {
+	_, err := c.sendRequest("DELETE", path)
+	return err
 }
 
 // Upload uploads the specified source to the specified destination
@@ -171,7 +98,7 @@ func (c *Client) Upload(src []byte, dest string) error {
 	return nil
 }
 
-// Download downloads a file from the specified path.q
+// Download downloads a file from the specified path.
 func (c *Client) Download(path string) ([]byte, error) {
 
 	pathUrl, err := url.Parse(path)
@@ -198,6 +125,7 @@ func (c *Client) Download(path string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	error := Error{}
 	err = xml.Unmarshal(body, &error)
 	if err == nil {
@@ -209,6 +137,48 @@ func (c *Client) Download(path string) ([]byte, error) {
 	return body, nil
 }
 
-func (c *Client) sendRequest() {
+func (c *Client) Exists(path string) bool {
+	_, err := c.sendRequest("PROPFIND", path)
+	return err == nil
+}
 
+func (c *Client) sendRequest(request string, path string) ([]byte, error) {
+	// Create the https request
+
+	folderUrl, err := url.Parse(path)
+	if err != nil {
+		return nil, err
+	}
+
+	client := &http.Client{}
+	req, err := http.NewRequest(request, c.Url.ResolveReference(folderUrl).String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.SetBasicAuth(c.Username, c.Password)
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(body) > 0 {
+		error := Error{}
+		err = xml.Unmarshal(body, &error)
+		if err != nil {
+			return body, fmt.Errorf("Error during XML Unmarshal for response %s. The error was %s", body, err)
+		}
+		if error.Exception != "" {
+			return nil, fmt.Errorf("Exception: %s, Message: %s", error.Exception, error.Message)
+		}
+
+	}
+
+	return body, nil
 }

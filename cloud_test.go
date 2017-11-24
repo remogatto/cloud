@@ -66,3 +66,9 @@ func (t *testSuite) TestDownloadUpload() {
 
 	t.Equal("Hello World!\n", string(data))
 }
+
+func (t *testSuite) TestExists() {
+	err := client.Mkdir("Test")
+	t.Nil(err)
+	t.True(client.Exists("Test"))
+}
