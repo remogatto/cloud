@@ -2,9 +2,9 @@ version: "3"
 
 services:
 
-  nextcloud_cloud_test:
+  remogatto_cloud_test:
     restart: always
     image: nextcloud
-    container_name: nextcloud_cloud_test
+    container_name: remogatto_cloud_test
     ports:
-      - 8080:80
+      - 18080:80
