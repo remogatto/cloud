@@ -28,6 +28,10 @@ type Error struct {
 	Message string `xml:"message"`
 }
 
+func (e *Error) Error() string {
+	return fmt.Sprintf("Exception: %s, Message: %s", e.Exception, e.Message)
+}
+
 // Dial connects to an {own|next}Cloud instance at the specified
 // address using the given credentials.
 func Dial(host, username, password string) (*Client, error) {
@@ -115,7 +119,7 @@ func (c *Client) Download(path string) ([]byte, error) {
 	err = xml.Unmarshal(body, &error)
 	if err == nil {
 		if error.Exception != "" {
-			return nil, fmt.Errorf("Exception: %s, Message: %s", error.Exception, error.Message)
+			return nil, err
 		}
 	}
 
@@ -157,10 +161,10 @@ func (c *Client) sendRequest(request string, path string, data []byte) ([]byte, 
 		error := Error{}
 		err = xml.Unmarshal(body, &error)
 		if err != nil {
-			return body, fmt.Errorf("Error during XML Unmarshal for response %s. The error was %s", body, err)
+			return body, err
 		}
 		if error.Exception != "" {
-			return nil, fmt.Errorf("Exception: %s, Message: %s", error.Exception, error.Message)
+			return nil, err
 		}
 
 	}
