@@ -77,7 +77,7 @@ func (t *testSuite) TestUploadDir() {
 	files, err := client.UploadDir(filepath.Join(testDir, "Folder/*"), "Test/Folder/")
 	t.Nil(err)
 
-	t.Equal(1, files)
+	t.Equal(1, len(files))
 
 	data, err := client.Download("Test/Folder/test.txt")
 	t.Nil(err)

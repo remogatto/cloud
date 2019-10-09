@@ -63,24 +63,24 @@ func (c *Client) Upload(src []byte, dest string) error {
 }
 
 // UploadDir uploads an entire directory on the cloud. It returns the
-// number of uploaded files or error. It uses glob pattern in src.
-func (c *Client) UploadDir(src string, dest string) (int, error) {
+// path of uploaded files or error. It uses glob pattern in src.
+func (c *Client) UploadDir(src string, dest string) ([]string, error) {
 	files, err := filepath.Glob(src)
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 	for _, file := range files {
 		data, err := ioutil.ReadFile(file)
 		if err != nil {
-			return 0, err
+			return nil, err
 		}
 		err = c.Upload(data, filepath.Join(dest, filepath.Base(file)))
 		if err != nil {
-			return 0, err
+			return nil, err
 		}
 	}
 
-	return len(files), nil
+	return files, nil
 }
 
 // Download downloads a file from the specified path.
