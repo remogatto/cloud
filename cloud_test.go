@@ -67,6 +67,24 @@ func (t *testSuite) TestDownloadUpload() {
 	t.Equal("Hello World!\n", string(data))
 }
 
+func (t *testSuite) TestUploadDir() {
+	err := client.Mkdir("Test")
+	t.Nil(err)
+
+	err = client.Mkdir("Test/Folder")
+	t.Nil(err)
+
+	files, err := client.UploadDir(filepath.Join(testDir, "Folder/*"), "Test/Folder/")
+	t.Nil(err)
+
+	t.Equal(1, files)
+
+	data, err := client.Download("Test/Folder/test.txt")
+	t.Nil(err)
+
+	t.Equal("Hello World!\n", string(data))
+}
+
 func (t *testSuite) TestExists() {
 	err := client.Mkdir("Test")
 	t.Nil(err)

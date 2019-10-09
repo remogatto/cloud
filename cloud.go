@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"path/filepath"
 )
 
 // A client represents a client connection to a {own|next}cloud
@@ -43,59 +44,43 @@ func Dial(host, username, password string) (*Client, error) {
 
 // Mkdir creates a new directory on the cloud with the specified name.
 func (c *Client) Mkdir(path string) error {
-	_, err := c.sendRequest("MKCOL", path)
+	_, err := c.sendRequest("MKCOL", path, nil)
 	return err
 
 }
 
 // Delete removes the specified folder from the cloud.
 func (c *Client) Delete(path string) error {
-	_, err := c.sendRequest("DELETE", path)
+	_, err := c.sendRequest("DELETE", path, nil)
 	return err
 }
 
 // Upload uploads the specified source to the specified destination
 // path on the cloud.
 func (c *Client) Upload(src []byte, dest string) error {
+	_, err := c.sendRequest("PUT", dest, src)
+	return err
+}
 
-	destUrl, err := url.Parse(dest)
+// UploadDir uploads an entire directory on the cloud. It returns the
+// number of uploaded files or error. It uses glob pattern in src.
+func (c *Client) UploadDir(src string, dest string) (int, error) {
+	files, err := filepath.Glob(src)
 	if err != nil {
-		return err
+		return 0, err
 	}
-
-	// Create the https request
-
-	client := &http.Client{}
-	req, err := http.NewRequest("PUT", c.Url.ResolveReference(destUrl).String(), bytes.NewReader(src))
-	if err != nil {
-		return err
-	}
-
-	req.SetBasicAuth(c.Username, c.Password)
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	if len(body) > 0 {
-		error := Error{}
-		err = xml.Unmarshal(body, &error)
+	for _, file := range files {
+		data, err := ioutil.ReadFile(file)
 		if err != nil {
-			return fmt.Errorf("Error during XML Unmarshal for response %s. The error is %s", body, err)
+			return 0, err
 		}
-		if error.Exception != "" {
-			return fmt.Errorf("Exception: %s, Message: %s", error.Exception, error.Message)
+		err = c.Upload(data, filepath.Join(dest, filepath.Base(file)))
+		if err != nil {
+			return 0, err
 		}
-
 	}
 
-	return nil
+	return len(files), nil
 }
 
 // Download downloads a file from the specified path.
@@ -138,11 +123,11 @@ func (c *Client) Download(path string) ([]byte, error) {
 }
 
 func (c *Client) Exists(path string) bool {
-	_, err := c.sendRequest("PROPFIND", path)
+	_, err := c.sendRequest("PROPFIND", path, nil)
 	return err == nil
 }
 
-func (c *Client) sendRequest(request string, path string) ([]byte, error) {
+func (c *Client) sendRequest(request string, path string, data []byte) ([]byte, error) {
 	// Create the https request
 
 	folderUrl, err := url.Parse(path)
@@ -151,7 +136,7 @@ func (c *Client) sendRequest(request string, path string) ([]byte, error) {
 	}
 
 	client := &http.Client{}
-	req, err := http.NewRequest(request, c.Url.ResolveReference(folderUrl).String(), nil)
+	req, err := http.NewRequest(request, c.Url.ResolveReference(folderUrl).String(), bytes.NewReader(data))
 	if err != nil {
 		return nil, err
 	}
