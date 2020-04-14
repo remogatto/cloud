@@ -27,7 +27,7 @@ func TestRunner(t *testing.T) {
 func (t *testSuite) BeforeAll() {
 	var err error
 	client, err = Dial(
-		"http://localhost:18080/remote.php/webdav/",
+		"http://localhost:18080/",
 		"admin",
 		"password",
 	)
@@ -89,4 +89,25 @@ func (t *testSuite) TestExists() {
 	err := client.Mkdir("Test")
 	t.Nil(err)
 	t.True(client.Exists("Test"))
+}
+
+func (t *testSuite) TestCreateGroupFolder() {
+	groupFolder, err := client.CreateGroupFolder("GroupFolder")
+	t.Nil(err)
+	if groupFolder != nil {
+		t.Equal(uint(100), groupFolder.StatusCode)
+
+		result, err := client.AddGroupToGroupFolder("admin", groupFolder.Id)
+		t.Nil(err)
+		if result != nil {
+			t.Equal(uint(100), result.StatusCode)
+		}
+
+		result, err = client.SetGroupPermissionsForGroupFolder(31, "admin", groupFolder.Id)
+		t.Nil(err)
+		if result != nil {
+			t.Equal(uint(100), result.StatusCode)
+		}
+	}
+
 }

@@ -6,6 +6,8 @@ services:
     restart: always
     image: nextcloud:latest
     container_name: nextcloud_cloud_test
+    # volumes:
+    #   - ./custom_apps:/var/www/html/
     environment:
       - SQLITE_DATABASE=nextcloud
       - NEXTCLOUD_ADMIN_USER=admin
