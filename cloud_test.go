@@ -162,3 +162,24 @@ func (t *testSuite) TestDeleteShare() {
 
 	client.Delete("ShareTest")
 }
+
+func (t *testSuite) TestCreateReadOnlyShare() {
+	err := client.Mkdir("ShareTest")
+	t.Nil(err)
+
+	result, err := client.CreateReadOnlyShare("ShareTest")
+	t.Nil(err)
+
+	result, err = client.GetShare("ShareTest")
+	t.Nil(err)
+	t.True(len(result.Elements) > 0)
+
+	result, err = client.DeleteShare(result.Elements[0].Id)
+	t.Nil(err)
+
+	result, err = client.GetShare("ShareTest")
+	t.Nil(err)
+	t.True(len(result.Elements) == 0)
+
+	client.Delete("ShareTest")
+}

@@ -146,6 +146,15 @@ func (c *Client) CreateFileDropShare(path string) (*ShareResult, error) {
 	return c.sendOCSRequest("PUT", fmt.Sprintf("shares/%d", id), "permissions=4")
 }
 
+func (c *Client) CreateReadOnlyShare(path string) (*ShareResult, error) {
+	result, err := c.CreateShare(path, 3, "true", 4)
+	if err != nil {
+		return nil, err
+	}
+	id := result.Id
+	return c.sendOCSRequest("PUT", fmt.Sprintf("shares/%d", id), "permissions=1")
+}
+
 func (c *Client) sendWebDavRequest(request string, path string, data []byte) ([]byte, error) {
 	// Create the https request
 
