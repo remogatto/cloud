@@ -111,3 +111,54 @@ func (t *testSuite) TestCreateGroupFolder() {
 	}
 
 }
+
+func (t *testSuite) TestCreateFileDropShare() {
+	err := client.Mkdir("ShareTest")
+	t.Nil(err)
+
+	result, err := client.CreateFileDropShare("ShareTest")
+	t.Nil(err)
+
+	if result != nil {
+		t.Equal(uint(200), result.StatusCode)
+		t.True(len(result.Url) > 0)
+	}
+
+	client.Delete("ShareTest")
+
+}
+
+func (t *testSuite) TestGetShare() {
+	err := client.Mkdir("ShareTest")
+	t.Nil(err)
+
+	result, err := client.CreateFileDropShare("ShareTest")
+	t.Nil(err)
+
+	result, err = client.GetShare("ShareTest")
+	t.Nil(err)
+	t.True(len(result.Elements) > 0)
+
+	client.Delete("ShareTest")
+}
+
+func (t *testSuite) TestDeleteShare() {
+	err := client.Mkdir("ShareTest")
+	t.Nil(err)
+
+	result, err := client.CreateFileDropShare("ShareTest")
+	t.Nil(err)
+
+	result, err = client.GetShare("ShareTest")
+	t.Nil(err)
+	t.True(len(result.Elements) > 0)
+
+	result, err = client.DeleteShare(result.Elements[0].Id)
+	t.Nil(err)
+
+	result, err = client.GetShare("ShareTest")
+	t.Nil(err)
+	t.True(len(result.Elements) == 0)
+
+	client.Delete("ShareTest")
+}

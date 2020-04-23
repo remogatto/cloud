@@ -33,12 +33,19 @@ func (e *Error) Error() string {
 	return fmt.Sprintf("Exception: %s, Message: %s", e.Exception, e.Message)
 }
 
+type ShareElement struct {
+	Id  uint   `xml:"id"`
+	Url string `xml:"url"`
+}
+
 type ShareResult struct {
-	XMLName    xml.Name `xml:"ocs"`
-	Status     string   `xml:"meta>status"`
-	StatusCode uint     `xml:"meta>statuscode"`
-	Message    string   `xml:"meta>message"`
-	Id         uint     `xml:"data>id"`
+	XMLName    xml.Name       `xml:"ocs"`
+	Status     string         `xml:"meta>status"`
+	StatusCode uint           `xml:"meta>statuscode"`
+	Message    string         `xml:"meta>message"`
+	Id         uint           `xml:"data>id"`
+	Url        string         `xml:"data>url"`
+	Elements   []ShareElement `xml:"data>element"`
 }
 
 // Dial connects to an {own|next}Cloud instance at the specified
@@ -116,6 +123,27 @@ func (c *Client) AddGroupToGroupFolder(group string, folderId uint) (*ShareResul
 
 func (c *Client) SetGroupPermissionsForGroupFolder(permissions int, group string, folderId uint) (*ShareResult, error) {
 	return c.sendAppsRequest("POST", fmt.Sprintf("apps/groupfolders/folders/%d/groups/%s", folderId, group), fmt.Sprintf("permissions=%d", permissions))
+}
+
+func (c *Client) CreateShare(path string, shareType int, publicUpload string, permissions int) (*ShareResult, error) {
+	return c.sendOCSRequest("POST", "shares", fmt.Sprintf("path=%s&shareType=%d&publicUpload=%s&permissions=%d", path, shareType, publicUpload, permissions))
+}
+
+func (c *Client) GetShare(path string) (*ShareResult, error) {
+	return c.sendOCSRequest("GET", fmt.Sprintf("shares?path=%s", path), "")
+}
+
+func (c *Client) DeleteShare(id uint) (*ShareResult, error) {
+	return c.sendOCSRequest("DELETE", fmt.Sprintf("shares/%d", id), "")
+}
+
+func (c *Client) CreateFileDropShare(path string) (*ShareResult, error) {
+	result, err := client.CreateShare(path, 3, "true", 4)
+	if err != nil {
+		return nil, err
+	}
+	id := result.Id
+	return c.sendOCSRequest("PUT", fmt.Sprintf("shares/%d", id), "permissions=4")
 }
 
 func (c *Client) sendWebDavRequest(request string, path string, data []byte) ([]byte, error) {
@@ -200,6 +228,50 @@ func (c *Client) sendAppsRequest(request string, path string, data string) (*Sha
 		return nil, err
 	}
 	if result.StatusCode != 100 {
+		return nil, fmt.Errorf("Share API returned an unsuccessful status code %d", result.StatusCode)
+	}
+
+	return &result, nil
+}
+
+func (c *Client) sendOCSRequest(request string, path string, data string) (*ShareResult, error) {
+	// Create the https request
+
+	appsPath := filepath.Join("ocs/v2.php/apps/files_sharing/api/v1", path)
+
+	folderUrl, err := url.Parse(appsPath)
+	if err != nil {
+		return nil, err
+	}
+
+	client := &http.Client{}
+	req, err := http.NewRequest(request, c.Url.ResolveReference(folderUrl).String(), strings.NewReader(data))
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("OCS-APIRequest", "true")
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+	req.SetBasicAuth(c.Username, c.Password)
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	result := ShareResult{}
+
+	err = xml.Unmarshal(body, &result)
+	if err != nil {
+		return nil, err
+	}
+	if result.StatusCode != 200 {
 		return nil, fmt.Errorf("Share API returned an unsuccessful status code %d", result.StatusCode)
 	}
 
