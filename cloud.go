@@ -138,7 +138,7 @@ func (c *Client) DeleteShare(id uint) (*ShareResult, error) {
 }
 
 func (c *Client) CreateFileDropShare(path string) (*ShareResult, error) {
-	result, err := client.CreateShare(path, 3, "true", 4)
+	result, err := c.CreateShare(path, 3, "true", 4)
 	if err != nil {
 		return nil, err
 	}
