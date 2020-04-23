@@ -5,7 +5,6 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 	"path/filepath"
@@ -267,7 +266,7 @@ func (c *Client) sendOCSRequest(request string, path string, data string) (*Shar
 	}
 
 	result := ShareResult{}
-	log.Println(string(body))
+
 	err = xml.Unmarshal(body, &result)
 	if err != nil {
 		return nil, err
