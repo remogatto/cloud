@@ -94,7 +94,7 @@ func (c *Client) UploadDir(src string, dest string) ([]string, error) {
 		if err != nil {
 			return nil, err
 		}
-		err = c.Upload(data, filepath.Join(dest, filepath.Base(file)))
+		err = c.Upload(data, filepath.ToSlash(filepath.Join(dest, filepath.Base(file))))
 		if err != nil {
 			return nil, err
 		}
@@ -147,7 +147,7 @@ func (c *Client) CreateFileDropShare(path string) (*ShareResult, error) {
 }
 
 func (c *Client) CreateReadOnlyShare(path string) (*ShareResult, error) {
-	result, err := c.CreateShare(path, 3, "true", 4)
+	result, err := c.CreateShare(path, 3, "false", 4)
 	if err != nil {
 		return nil, err
 	}
@@ -158,8 +158,7 @@ func (c *Client) CreateReadOnlyShare(path string) (*ShareResult, error) {
 func (c *Client) sendWebDavRequest(request string, path string, data []byte) ([]byte, error) {
 	// Create the https request
 
-	webdavPath := filepath.Join("remote.php/webdav", path)
-
+	webdavPath := filepath.ToSlash(filepath.Join("remote.php/webdav", path))
 	folderUrl, err := url.Parse(webdavPath)
 	if err != nil {
 		return nil, err
@@ -203,7 +202,7 @@ func (c *Client) sendWebDavRequest(request string, path string, data []byte) ([]
 func (c *Client) sendAppsRequest(request string, path string, data string) (*ShareResult, error) {
 	// Create the https request
 
-	appsPath := filepath.Join("apps", path)
+	appsPath := filepath.ToSlash(filepath.Join("apps", path))
 
 	folderUrl, err := url.Parse(appsPath)
 	if err != nil {
@@ -246,7 +245,7 @@ func (c *Client) sendAppsRequest(request string, path string, data string) (*Sha
 func (c *Client) sendOCSRequest(request string, path string, data string) (*ShareResult, error) {
 	// Create the https request
 
-	appsPath := filepath.Join("ocs/v2.php/apps/files_sharing/api/v1", path)
+	appsPath := filepath.ToSlash(filepath.Join("ocs/v2.php/apps/files_sharing/api/v1", path))
 
 	folderUrl, err := url.Parse(appsPath)
 	if err != nil {
