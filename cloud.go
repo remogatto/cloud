@@ -147,7 +147,7 @@ func (c *Client) CreateFileDropShare(path string) (*ShareResult, error) {
 }
 
 func (c *Client) CreateReadOnlyShare(path string) (*ShareResult, error) {
-	result, err := c.CreateShare(path, 3, "true", 4)
+	result, err := c.CreateShare(path, 3, "false", 4)
 	if err != nil {
 		return nil, err
 	}
