@@ -158,8 +158,7 @@ func (c *Client) CreateReadOnlyShare(path string) (*ShareResult, error) {
 func (c *Client) sendWebDavRequest(request string, path string, data []byte) ([]byte, error) {
 	// Create the https request
 
-	webdavPath := filepath.Join("remote.php/webdav", path)
-
+	webdavPath := filepath.ToSlash(filepath.Join("remote.php/webdav", path))
 	folderUrl, err := url.Parse(webdavPath)
 	if err != nil {
 		return nil, err
