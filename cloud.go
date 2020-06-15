@@ -94,7 +94,7 @@ func (c *Client) UploadDir(src string, dest string) ([]string, error) {
 		if err != nil {
 			return nil, err
 		}
-		err = c.Upload(data, filepath.Join(dest, filepath.Base(file)))
+		err = c.Upload(data, filepath.ToSlash(filepath.Join(dest, filepath.Base(file))))
 		if err != nil {
 			return nil, err
 		}
@@ -202,7 +202,7 @@ func (c *Client) sendWebDavRequest(request string, path string, data []byte) ([]
 func (c *Client) sendAppsRequest(request string, path string, data string) (*ShareResult, error) {
 	// Create the https request
 
-	appsPath := filepath.Join("apps", path)
+	appsPath := filepath.ToSlash(filepath.Join("apps", path))
 
 	folderUrl, err := url.Parse(appsPath)
 	if err != nil {
@@ -245,7 +245,7 @@ func (c *Client) sendAppsRequest(request string, path string, data string) (*Sha
 func (c *Client) sendOCSRequest(request string, path string, data string) (*ShareResult, error) {
 	// Create the https request
 
-	appsPath := filepath.Join("ocs/v2.php/apps/files_sharing/api/v1", path)
+	appsPath := filepath.ToSlash(filepath.Join("ocs/v2.php/apps/files_sharing/api/v1", path))
 
 	folderUrl, err := url.Parse(appsPath)
 	if err != nil {
